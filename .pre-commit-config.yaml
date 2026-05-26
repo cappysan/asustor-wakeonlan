@@ -1,0 +1,55 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+#
+# Use `pre-commit autoupdate` to update this file.
+repos:
+  - repo: "https://github.com/pre-commit/pre-commit-hooks"
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-xml
+      - id: check-yaml
+        exclude: ".gitlab"
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: file-contents-sorter
+        args: ["--unique"]
+        files: "support/codespell.exclude"
+      - id: fix-byte-order-marker
+      - id: forbid-submodules
+      - id: mixed-line-ending
+        name: "fix mixed line ending"
+        args: ["--fix=lf"]
+      - id: pretty-format-json
+        name: "run json pretty format"
+        args: ["--autofix", "--indent", "2", "--no-sort-keys"]
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+        name: "fix trailing whitespace"
+        args: ["--markdown-linebreak-ext", "md"]
+
+
+  - repo: "https://github.com/codespell-project/codespell"
+    rev: v2.4.2
+    hooks:
+    - id: codespell
+      name: "run codespell"
+      additional_dependencies:
+        - tomli
+
+
+  - repo: "https://github.com/andreoliwa/nitpick"
+    rev: v0.38.1
+    hooks:
+      - id: nitpick-check
+        name: "run nitpick check"

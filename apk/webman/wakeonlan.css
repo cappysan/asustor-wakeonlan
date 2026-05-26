@@ -1,0 +1,32 @@
+.app-wakeonlan .x-fieldset-header-text {
+    font-weight: bold !important;
+}
+
+.app-wakeonlan-icon {
+    background-image: url('../cappysan-wakeonlan/images/icon-app.png') !important;
+    background-repeat: no-repeat !important;
+    background-size: 16px 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.app-wakeonlan-send-btn {
+    background-color: #3498db !important;
+    border-color: #2980b9 !important;
+    color: #ffffff !important;
+}
+
+.app-wakeonlan-send-btn:hover {
+    background-color: #2980b9 !important;
+}
+
+.app-wakeonlan-saved-header {
+    padding: 10px 0 4px 0;
+    border-top: 1px solid #d0d0d0;
+    font-size: 13px;
+}
+
+.app-wakeonlan-err .x-form-display-field {
+    color: #c0392b !important;
+    font-size: 11px;
+}

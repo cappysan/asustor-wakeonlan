@@ -1,0 +1,46 @@
+---
+# The following file enables recreating a templated output dir by executing:
+#   mk-scaffold clone "https://gitlab.com/cappysan/scaffolds/asustor-template" --input-file .answers.yml --output-dir output
+answers:
+  - include: "~/.config/scaffold/answers.yml"
+    optional: True
+
+  - author: "Julien Lecomte"
+  - email: "julien@cappysan.dev"
+
+  - project_name: "cappysan-wakeonlan"
+  - project_slug: "cappysan-wakeonlan"
+  - project_url: "https://gitlab.com/cappysan/asustor/wakeonlan"
+  - project_description: "Wake-On-Lan user interface."
+
+  - has_documentation: False
+  - documentation_url: ""
+
+  - has_ci: True
+  - has_pages: False
+  - has_releases: True
+
+  - has_precommit: True
+  - has_precommit_codespell: True
+  - has_precommit_nitpick: True
+
+  - license: "MIT"
+  - version: "2026.6.5"
+  - version_style: "calver-rev"
+  - copyright_string: "Cappysan, Julien Lecomte, and contributors"
+
+  - keep_placeholders: False
+
+  - template_url: "https://gitlab.com/cappysan/scaffolds/asustor-template"
+  - template_version: "1.1.0-r4"
+
+  - creation_year: "2026"
+  - last_update: "2026-06-03 20:25:27"
+
+  - maintainer: "Cappysan"
+  - developer: "Cappysan"
+
+  - app_name: "wakeonlan"
+  - cfg_name: "wakeonlan"
+  - cappysan_name: "cappysan-wakeonlan"
+  - asustor_name: "asustor-wakeonlan"

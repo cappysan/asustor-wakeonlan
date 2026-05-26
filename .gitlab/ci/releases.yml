@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: MIT
+#
+---
+# ------------------------------------------------------------------------------
+# release => gitlab:release [[
+# ------------------------------------------------------------------------------
+.gitlab:release:
+  extends: .core:defaults
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - /bin/true
+  release:
+    name: "$CI_COMMIT_TAG"
+    description: "$CI_COMMIT_TAG"
+    tag_name: "$CI_COMMIT_TAG"
+    ref: "$CI_COMMIT_SHA"
+  rules:
+    - !reference [".core:rules:not_if", is_merge_request]
+    - !reference [".core:rules:not_if", is_not_protected]
+    - !reference [".core:rules:not_if", is_not_tag]
+# ]]
+
+# vim: foldmarker=[[,]] foldmethod=marker

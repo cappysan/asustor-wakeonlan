@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MIT
+#
+### Generic ###
+/.env
+/.cache/
+/public/
+
+# Virtual env
+/.python-version
+/.tox/
+/.venv*/
+
+### Project specifics ###
+/*.apk*

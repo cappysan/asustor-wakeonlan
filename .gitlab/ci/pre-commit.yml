@@ -1,0 +1,111 @@
+# SPDX-License-Identifier: MIT
+#
+---
+variables:
+  PRECOMMITSKIP:
+    value: ""
+    description: "pre-commit jobs to skip"
+  PRECOMMITFLAGS:
+    value: ""
+    description: "pre-commit additional flags"
+
+
+# ------------------------------------------------------------------------------
+# .pre-commit:user
+# ------------------------------------------------------------------------------
+.pre-commit:user:pre:
+  before_script:
+    - /bin/true
+
+.pre-commit:user:post:
+  before_script:
+    - /bin/true
+
+
+# ------------------------------------------------------------------------------
+# .pre-commit:prepare
+# ------------------------------------------------------------------------------
+.pre-commit:defaults:prepare:
+  before_script:
+    # Some precommit hooks, such as for ansible, will complain that it's in a world
+    # writable directory
+    - chmod 755 .
+    - |
+      # Install pipx if missing
+      if ! builtin type -P "pipx" &>/dev/null; then
+         apt-get update
+         apt-get install -yq --no-install-recommends pipx
+      fi
+    - PIPX_BIN_DIR=/usr/local/bin pipx install pre-commit
+
+
+# ------------------------------------------------------------------------------
+# .pre-commit:defaults
+# ------------------------------------------------------------------------------
+.pre-commit:defaults:
+  extends: .core:defaults
+  image: "$PYTHON_JOB_IMAGE"
+  stage: lint
+  inherit:
+    default: false
+  before_script:
+    - !reference [".core:defaults", before_script]
+    - !reference [".pre-commit:user:pre", before_script]
+    - !reference [".pre-commit:defaults:prepare", before_script]
+    - !reference [".pre-commit:user:post", before_script]
+
+
+# ------------------------------------------------------------------------------
+# .pre-commit
+# ------------------------------------------------------------------------------
+# Runs pre-commit configured tools.
+#
+# This job has value in a merge request, in order to prevent it from being
+# merged.
+.pre-commit:
+  extends: .pre-commit:defaults
+  variables:
+    PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.cache/pre-commit"
+  cache:
+    - key: ${CI_COMMIT_BRANCH}-pre-commit
+      paths:
+        - .cache
+  script:
+    - SKIP="${PRECOMMITSKIP} ${SKIP}" pre-commit run -a ${PRECOMMITFLAGS}
+  rules:
+    # On a merge request, user is expected to fix the error before merging
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      allow_failure: false
+      when: on_success
+
+    # Allow failure when there's no action that can be taken to fix the pipeline.
+    - when: on_success
+      allow_failure: true
+
+
+# ------------------------------------------------------------------------------
+# .pre-commit:autoupdate
+# ------------------------------------------------------------------------------
+# Verify that pre-commit is up-to-date.
+#
+# This job has value in a merge request, in order to prevent it from being
+# merged.
+.pre-commit:autoupdate:
+  extends: .pre-commit:defaults
+  script:
+    - pre-commit autoupdate
+    - |
+      #
+      if test -n "$(git status --porcelain)"; then
+        color_error "error: .pre-commit-config.yaml is not up-to-date"
+        exit 13
+      fi
+  rules:
+    # On a merge request, user is expected to fix the error before merging
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      allow_failure: false
+      when: on_success
+
+    # Allow failure when there's no action that can be taken to fix the pipeline.
+    - when: on_success
+      allow_failure: true

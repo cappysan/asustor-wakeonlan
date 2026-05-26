@@ -1,0 +1,28 @@
+/* _AS_STRINGS */
+_AS_STRINGS = {};
+
+/*WAKEONLAN*/
+_AS_STRINGS.WAKEONLAN = {};
+_AS_STRINGS.WAKEONLAN.APP_TITLE          = 'Wake on LAN';
+_AS_STRINGS.WAKEONLAN.SEND               = 'Send';
+_AS_STRINGS.WAKEONLAN.MAC_ADDRESS        = 'MAC Address';
+_AS_STRINGS.WAKEONLAN.BROADCAST          = 'Broadcast';
+_AS_STRINGS.WAKEONLAN.PORT               = 'Port';
+_AS_STRINGS.WAKEONLAN.SEND_BUTTON        = 'Send';
+_AS_STRINGS.WAKEONLAN.SAVE_BUTTON        = 'Save';
+_AS_STRINGS.WAKEONLAN.SAVE_TITLE         = 'Save';
+_AS_STRINGS.WAKEONLAN.SAVE_NAME_LABEL    = 'Name';
+_AS_STRINGS.WAKEONLAN.SAVE_NAME_REQUIRED = 'Name is required';
+_AS_STRINGS.WAKEONLAN.DUPLICATE_ENTRY    = 'An entry with the same MAC address, broadcast and port already exists.';
+_AS_STRINGS.WAKEONLAN.RENAME_BUTTON      = 'Rename';
+_AS_STRINGS.WAKEONLAN.RENAME_TITLE       = 'Rename';
+_AS_STRINGS.WAKEONLAN.REMOVE_BUTTON      = 'Remove';
+_AS_STRINGS.WAKEONLAN.SAVED_SECTION      = 'Saved';
+_AS_STRINGS.WAKEONLAN.COL_NAME           = 'Name';
+_AS_STRINGS.WAKEONLAN.COL_MAC            = 'MAC Address';
+_AS_STRINGS.WAKEONLAN.COL_BROADCAST      = 'Broadcast';
+_AS_STRINGS.WAKEONLAN.COL_PORT           = 'Port';
+_AS_STRINGS.WAKEONLAN.PACKET_SENT        = 'Wake on LAN packet sent';
+_AS_STRINGS.WAKEONLAN.INVALID_MAC        = 'Invalid MAC address (e.g. AA:BB:CC:DD:EE:FF)';
+_AS_STRINGS.WAKEONLAN.INVALID_IP         = 'Invalid IP address';
+_AS_STRINGS.WAKEONLAN.INVALID_PORT       = 'Port must be between 1 and 65535';

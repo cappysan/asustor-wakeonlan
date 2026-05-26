@@ -1,0 +1,586 @@
+# SPDX-License-Identifier: MIT
+#
+---
+variables:
+  PYTHON: python3
+  BLACKFLAGS: "--check"
+  TWINEFLAGS: "--non-interactive --disable-progress-bar"
+
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+  PYTHON_APT_PACKAGES:
+    value: "make pipx"
+    description: "Debian packages to install"
+  PYTHON_APT_EXTRA_PACKAGES:
+    value: ""
+    description: "Debian packages to additionally install"
+
+  PYTHON_PIPFLAGS:
+    value: ""
+    description: "Flags to pass to `uv pip install` command"
+  PYTHON_PIP_PACKAGES:
+    value: "pip setuptools tomlq"
+    description: "Python pip packages to install"
+  PYTHON_PIP_EXTRA_PACKAGES:
+    value: ""
+    description: "Python pip packages to additionally install"
+  PYTHON_PIP_EXTRA_INDEX_URLS:
+    value: ""
+    description: "Extra URLs of package indexes to use, comma delimited"
+  PYTHON_PIP_REQUIREMENT_FILES:
+    value: "requirements-dev.txt requirements.txt"
+    description: "Files to search for Python requirements. Uses only first found."
+
+  # Debian's pipx will be used to install latest pipx and uv, regardless
+  # of PYTHON_PIPX_PACKAGES
+  PYTHON_PIPXFLAGS:
+    value: ""
+    description: "Flags to pass to `pipx install` command"
+  PYTHON_PIPX_PACKAGES:
+    value: ""
+    description: "Python pipx packages to install"
+  PYTHON_PIPX_EXTRA_PACKAGES:
+    value: ""
+    description: "Python pipx packages to additionally install"
+  PYTHON_PIPX_EXTRA_INDEX_URLS:
+    value: ""
+    description: "Extra URLs of package indexes to use, comma delimited"
+
+  # Supported Python versions: https://www.python.org/downloads/
+  PYTHON_MATRIX_VERSION:
+    value: "3.10 3.11 3.12 3.13 3.14"
+    description: "Space delimited list of Python versions to check (3.6 to 3.13) (https://www.python.org/downloads/)"
+
+
+# ------------------------------------------------------------------------------
+# .python:user
+# ------------------------------------------------------------------------------
+.python:user:pre:
+  before_script:
+    - /bin/true
+
+.python:user:post:
+  before_script:
+    - /bin/true
+
+
+# ------------------------------------------------------------------------------
+# .python:defaults:before_script [[
+# ------------------------------------------------------------------------------
+# Applies to all python jobs, even if not directly a python job.
+#
+# The following enables overriding .python:defaults without making a circular chain.
+#
+.python:defaults:before_script:env:
+  before_script:
+    - |
+      # !reference [".python:defaults:before_script:env", before_script]
+      color_title $(${PYTHON:-python3} --version)
+      if test -e .env; then
+        color_title "Found .env file. Setting environment..."
+        color_command source .env
+        source .env
+      fi
+
+.python:defaults:before_script:apt_packages:
+  # Install apt packages from PYTHON_APT_PACKAGES if not yet present
+  before_script:
+    - |
+      # !reference [".python:defaults:before_script:apt_packages", before_script]
+      section_start_c "python_apt_packages" "Installing apt packages"
+      color_title "Installing packages: ${PYTHON_APT_PACKAGES}"
+      if test -n "${PYTHON_APT_PACKAGES}"; then
+        as_install=0
+        for as_pkg in ${PYTHON_APT_PACKAGES}; do
+           if ! dpkg -l "${as_pkg}" &>/dev/null; then as_install=1 ; fi
+        done
+        if test ${as_install} == 1; then
+           (set -x; apt-get update; apt-get install -y --no-install-recommends ${APTGET_INSTALL_FLAGS} ${PYTHON_APT_PACKAGES})
+        fi
+      fi
+      section_end "python_apt_packages"
+
+
+.python:defaults:before_script:apt_extra_packages:
+  # Install apt packages from PYTHON_APT_EXTRA_PACKAGES if not yet present
+  before_script:
+    - |
+      # !reference [".python:defaults:before_script:apt_extra_packages", before_script]
+      section_start_c "python_apt_extra_packages" "Installing extra apt packages"
+      color_title "Installing packages: ${PYTHON_APT_EXTRA_PACKAGES}"
+      if test -n "${PYTHON_APT_EXTRA_PACKAGES}"; then
+        as_install=0
+        for as_pkg in ${PYTHON_APT_EXTRA_PACKAGES}; do
+           if ! dpkg -l "${as_pkg}" &>/dev/null; then as_install=1 ; fi
+        done
+        if test ${as_install} == 1; then
+           color_command apt-get update
+           apt-get update
+
+           color_command apt-get update; apt-get install -y --no-install-recommends ${APTGET_INSTALL_FLAGS} ${PYTHON_APT_EXTRA_PACKAGES}
+           apt-get update; apt-get install -y --no-install-recommends ${APTGET_INSTALL_FLAGS} ${PYTHON_APT_EXTRA_PACKAGES}
+        fi
+      fi
+      section_end "python_apt_extra_packages"
+
+
+.python:defaults:before_script:configuration:
+  # Copy configuration files if they are set
+  before_script:
+    - |
+      # !reference [".python:defaults:before_script:configuration", before_script]
+      section_start_c "python_conf_files" "Installing python packages configuration files"
+      if test -n "${PYTHON_FILE_PIP_CONF}"; then
+        color_title "Found pip.conf file. Moving it to ~/.config/pip/pip.conf"
+        mkdir -p ${HOME}/.config/pip || true
+        # Copy to home location
+        cp -v ${PYTHON_FILE_PIP_CONF} ${HOME}/.config/pip/pip.conf
+      fi
+      if test -n "${PYTHON_FILE_PYPIRC}"; then
+        color_title "Found pypirc.conf file. Moving it to ~/.pypirc"
+        (set -x;
+          mkdir -pv ${HOME} || true;
+          cp -v ${PYTHON_FILE_PYPIRC} ${HOME}/.pypirc
+        )
+      fi
+      section_end "python_conf_files"
+
+
+.python:defaults:before_script:pipx:
+  # Install python packages from PYTHON_PIPX_PACKAGES one by one
+  before_script:
+    - |
+      # !reference [".python:extras:pipx", before_script]
+      section_start_c "python_pipx_packages" "Installing python binary packages (pipx)"
+      color_title "Installing Python packages: ${PYTHON_PIPX_PACKAGES} ${PYTHON_PIPX_EXTRA_PACKAGES} ${PYTHON_PIPX_JOB_PACKAGES}"
+      # Install pipx
+      for as_pkg in "pipx" "uv" ${PYTHON_PIPX_PACKAGES} ${PYTHON_PIPX_EXTRA_PACKAGES} ${PYTHON_PIPX_JOB_PACKAGES}; do
+        (set -x;
+          export PIPX_BIN_DIR=/usr/local/bin;
+          pipx install \
+            ${PYTHON_PIPXFLAGS} \
+            $(set +x; echo "${PYTHON_PIPX_EXTRA_INDEX_URLS}" | xargs -rn1 echo -n " --index-url ") \
+            ${as_pkg}
+        )
+      done
+      section_end "python_pipx_packages"
+
+
+.python:defaults:before_script:venv:
+    # Activate a virtual environment
+  before_script:
+    - |
+      # !reference [".python:defaults:before_script:venv", before_script]
+      color_title "Creating virtual environment"
+      color_command uv venv --clear --no-progress --relocatable --no-managed-python .venv
+      uv venv --clear --no-progress --relocatable --no-managed-python .venv
+      source .venv/bin/activate
+
+
+.python:defaults:before_script:pip:
+  # Install python packages from PYTHON_PIP_PACKAGES one by one
+  before_script:
+    - |
+      # !reference [".python:defaults:before_script:pip", before_script]
+      section_start_c "python_pip_packages" "Installing python library packages"
+      color_title "Installing Python packages: ${PYTHON_PIP_PACKAGES} ${PYTHON_PIP_EXTRA_PACKAGES} ${PYTHON_PIP_JOB_PACKAGES}"
+      for as_pkg in ${PYTHON_PIP_PACKAGES} ${PYTHON_PIP_EXTRA_PACKAGES} ${PYTHON_PIP_JOB_PACKAGES}; do
+        color_command uv pip install --no-managed-python --no-python-downloads --no-progress \
+          ${PYTHON_PIPFLAGS} \
+          ${as_pkg}
+        uv pip install --no-managed-python --no-python-downloads --no-progress \
+          ${PYTHON_PIPFLAGS} \
+          ${as_pkg}
+      done
+      section_end "python_pip_packages"
+
+
+.python:defaults:before_script:requirements:
+  # Install python packages from the first requirements file found from PYTHON_PIP_REQUIREMENT_FILES
+  # Requirement files should use the '-r <file>.txt' notation to include it's dependencies
+  before_script:
+    - |
+      # !reference [".python:defaults:before_script:requirements", before_script]
+      section_start_c "python_pip_requirement_files" "Installing Python packages from requirements"
+      color_title "Installing Python packages from: ${PYTHON_PIP_REQUIREMENT_FILES:-/dev/null}"
+      for as_file in ${PYTHON_PIP_REQUIREMENT_FILES:-/dev/null}; do
+        if test -f ${as_file}; then
+          echo "Found '${as_file}' first, installing from this file only." >&2
+          color_command uv pip install --no-managed-python --no-python-downloads --no-progress \
+            ${PYTHON_PIPFLAGS} \
+            -r ${as_file}
+          uv pip install --no-managed-python --no-python-downloads --no-progress \
+            ${PYTHON_PIPFLAGS} \
+            -r ${as_file} 1>&2
+          break
+        fi
+      done
+      section_end "python_pip_requirement_files"
+
+
+.python:defaults:before_script:freeze:
+  # List current packages, helpful for future reference
+  before_script:
+    - |
+      # !reference [".python:defaults:before_script:freeze", before_script]
+      section_start_c "python_pip_freeze" "Listing installed python packages"
+      color_command uv pip freeze
+      uv pip freeze
+      section_end "python_pip_freeze"
+
+
+.python:defaults:before_script:
+  before_script:
+    - !reference [".python:defaults:before_script:env", before_script]
+    - !reference [".python:defaults:before_script:apt_packages", before_script]
+    - !reference [".python:defaults:before_script:apt_extra_packages", before_script]
+    - !reference [".python:defaults:before_script:configuration", before_script]
+    - !reference [".python:defaults:before_script:pipx", before_script]
+    - !reference [".python:defaults:before_script:venv", before_script]
+    - !reference [".python:defaults:before_script:pip", before_script]
+    - !reference [".python:defaults:before_script:requirements", before_script]
+    - !reference [".python:defaults:before_script:freeze", before_script]
+# ]]
+
+
+# ------------------------------------------------------------------------------
+# .python:defaults [[
+# ------------------------------------------------------------------------------
+.python:defaults:
+  extends: .core:defaults
+  image: "$PYTHON_JOB_IMAGE"
+  cache:
+    key:
+      prefix: ${CI_COMMIT_BRANCH}-${CI_JOB_NAME}
+      files:
+        - requirements.txt
+        - requirements-dev.txt
+    paths:
+      - ".cache"
+    policy: pull-push
+  before_script:
+    - !reference [".core:defaults", before_script]
+    - !reference [".python:user:pre", before_script]
+    - !reference [".python:defaults:before_script", before_script]
+    - !reference [".python:user:post", before_script]
+    - mkdir -p public/reports
+  script:
+    - !reference [".core:make", script]
+# ]]
+
+
+# ------------------------------------------------------------------------------
+# test => python:pylint [[
+# ------------------------------------------------------------------------------
+# Generates pytest coverage in code climate format and text format.
+#
+# This job only has value in a merge request, in order to prevent it from being
+# merged. Also, pylint could be updated and make previous jobs start to fail.
+#
+# Due to a gitlab bug, use a fake extends
+.python:pylint:variables:
+  variables:
+    MAKEFILE_TARGET: pylint
+    PYTHON_PIP_JOB_PACKAGES: "pylint-codeclimate~=1.2.4"
+
+.python:pylint:
+  extends:
+    - .python:defaults
+    - .python:pylint:variables
+  stage: lint
+  script:
+      # !reference [".core:make", script]
+    - |
+      #
+      color_command make ${MAKEFILE_TARGET} ${MAKEFILE_FLAGS} PYLINTFLAGS="--output-format=codeclimate:public/reports/pylint.json --output-format=text ${PYLINTFLAGS}"
+      make ${MAKEFILE_TARGET} ${MAKEFILE_FLAGS} PYLINTFLAGS="--output-format=codeclimate:public/reports/pylint.json --output-format=text ${PYLINTFLAGS}"
+  artifacts:
+    when: always
+    paths:
+      - public
+    reports:
+      codequality: public/reports/pylint.json
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      allow_failure: false
+      when: on_success
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+      allow_failure: true
+      when: on_success
+    - when: on_success
+# ]]
+
+
+# ------------------------------------------------------------------------------
+# coverage => python:coverage [[
+# ------------------------------------------------------------------------------
+.python:coverage:
+  extends: .python:defaults
+  stage: coverage
+  variables:
+    MAKEFILE_TARGET: pycov
+  coverage: '/(?m)^TOTAL.*\s+(\d+\%)$/'
+  artifacts:
+    when: always
+    paths:
+      - public/pytest
+      - public/coverage
+      - public/reports
+    reports:
+      junit: public/reports/unit-tests.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: public/reports/coverage.xml
+  rules:
+    - when: always
+# ]]
+
+
+# ------------------------------------------------------------------------------
+# coverage => python:radon [[
+# ------------------------------------------------------------------------------
+.python:radon:
+  extends: .python:defaults
+  stage: coverage
+  variables:
+    PYTHON_APT_EXTRA_PACKAGES: "radon"
+    MAKEFILE_TARGET: ""
+    # Add an empty line at the end to avoid a 0 byte file which gitlab doesn't
+    # really like.
+  script:
+    - mkdir -pv public/reports
+    - |
+      #
+      section_start "run_radon_cc" "Running radon cc on current package"
+      radon cc --min B --no-assert -sa --total-average src | tee public/reports/radon-cc.txt
+      echo "" >> public/reports/radon-cc.txt
+      radon cc --no-assert -sa --total-average --codeclimate -O public/reports/radon-cc.json src
+      section_end "run_radon_cc"
+
+    - |
+      #
+      section_start "run_radon_mi" "Running radon mi on current package"
+      radon mi --min B -s src | tee public/reports/radon-mi.txt
+      echo "" >> public/reports/radon-mi.txt
+      radon mi --json -s -O public/reports/radon-mi.json src
+      section_end "run_radon_mi"
+  artifacts:
+    when: always
+    paths:
+      - public/reports
+    reports:
+      codequality: public/reports/radon-cc.json
+  rules:
+    - when: always
+# ]]
+
+# ------------------------------------------------------------------------------
+# build => python:package:build [[
+# ------------------------------------------------------------------------------
+.python:package:build:
+  extends: .python:defaults
+  stage: build
+  variables:
+    MAKEFILE_TARGET: pydist
+    PYTHON_PIP_JOB_PACKAGES: "twine build pip-chill wheel"
+  cache: null
+  before_script:
+    - !reference [".python:defaults", before_script]
+  script:
+    - !reference [".core:make", script]
+    # Clear files before saving them as artifacts, in order to test package without
+    # requirement files.
+    # Nevertheless, we still need requirements-dev.txt to install the dev packages
+    # to run tests.
+    - |
+      #
+      for as_file in constraints.txt requirements.in requirements.txt; do
+        if test -f ${as_file}; then
+          echo "" > ${as_file}
+        fi
+      done
+  artifacts:
+    when: on_success
+    name: "$CI_PROJECT_NAME-$CI_PROJECT_ID-$CI_COMMIT_REF_SLUG-$CI_PIPELINE_IID"
+    paths:
+      - Makefile
+      - constraints.txt
+      - dist/
+      - pyproject.toml
+      - pytest.ini
+      - requirements*.*
+      - setup.cfg
+      - setup.py
+      - support/
+      - tests
+  rules:
+    - when: always
+# ]]
+
+
+# ------------------------------------------------------------------------------
+# test => python:package:test [[
+#
+# Stage: test
+# ------------------------------------------------------------------------------
+# Run tests after pydist installation
+#
+.python:package:test:
+  extends: .python:defaults
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+    PYTHON_PIP_REQUIREMENT_FILES: "/dev/null"
+    MAKEFILE_TARGET: pycheck
+  cache: null
+  script:
+    # Install current package
+    - |
+      #
+      section_start "install_wheel" "Running pip install on current package"
+      cd dist
+      (set -x;
+        ${PYTHON} -mpip install \
+          $(set +x; echo "${PYTHON_PIP_EXTRA_INDEX_URLS}" | xargs -rn1 echo -n " --extra-index-url ") \
+          *.whl
+      )
+      cd -
+      section_end "install_wheel"
+
+    # Remove all files but ./tests
+    - |
+      #
+      section_start "install_requirements" "Installing tests requirements only"
+      find * -maxdepth 0 -type d -a ! -name 'tests' -a ! -name 'support' -exec rm -vfr {} \;
+      (set -x;
+        ${PYTHON} -mpip install -U \
+          $(set +x; echo "${PYTHON_PIP_EXTRA_INDEX_URLS}" | xargs -rn1 echo -n " --extra-index-url ") \
+          -r requirements-dev.txt
+      )
+      section_end "install_requirements"
+
+    - !reference [".core:make", script]
+  artifacts:
+    when: on_success
+    paths:
+      - public
+    reports:
+      junit: public/reports/unit-tests.xml
+  rules:
+    - when: always
+# ]]
+
+
+# ------------------------------------------------------------------------------
+# test => python:matrix [[
+# ------------------------------------------------------------------------------
+.python:matrix:3.x:
+  extends: .python:defaults
+  variables:
+    MAKEFILE_TARGET: pycov
+  stage: test
+  needs:
+    - job: python:coverage
+      artifacts: false
+  artifacts:
+    when: always
+    reports:
+      junit: public/reports/unit-tests.xml
+
+.python:matrix:3.6:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.6"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.6\b/"
+      when: never
+    - when: on_success
+
+.python:matrix:3.7:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.7"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.7\b/"
+      when: never
+    - when: on_success
+
+.python:matrix:3.8:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.8"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.8\b/"
+      when: never
+    - when: on_success
+
+.python:matrix:3.9:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.9"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.9\b/"
+      when: never
+    - when: on_success
+
+.python:matrix:3.10:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.10"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.10\b/"
+      when: never
+    - when: on_success
+
+.python:matrix:3.11:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.11"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.11\b/"
+      when: never
+    - when: on_success
+
+.python:matrix:3.12:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.12"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.12\b/"
+      when: never
+    - when: on_success
+
+.python:matrix:3.13:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.13"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.13\b/"
+      when: never
+    - when: on_success
+
+.python:matrix:3.14:
+  extends: .python:matrix:3.x
+  image: "$PYTHON_JOB_IMAGE_NAMESPACE/python:3.14"
+  rules:
+    - if: $PYTHON_MATRIX_VERSION !~ "/\b3.14\b/"
+      when: never
+    - when: on_success
+# ]]
+
+# ------------------------------------------------------------------------------
+# deploy => python:package:publish [[
+# ------------------------------------------------------------------------------
+# Uploads python package, using Trusted Publisher
+# https://docs.pypi.org/trusted-publishers/using-a-publisher/
+.python:package:publish:
+  extends: .python:defaults
+  stage: deploy
+  variables:
+    PYTHON_PIP_JOB_PACKAGES: "twine build pip-chill wheel id"
+    MAKEFILE_TARGET: pydist-upload
+    TWINE_REPOSITORY: "pypi"
+  cache: null
+  id_tokens:
+    PYPI_ID_TOKEN:
+      aud: $TWINE_REPOSITORY
+  artifacts: null
+  rules:
+    - !reference [".core:rules:not_if", is_merge_request]
+    - !reference [".core:rules:not_if", is_not_protected]
+    - !reference [".core:rules:not_if", is_not_tag]
+# ]]
+#
+# vim: foldmarker=[[,]] foldmethod=marker

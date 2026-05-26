@@ -1,0 +1,16 @@
+# Functions
+# =========
+function logger() {
+  echo "${@}" >&2
+  syslog --log 0 --level 0 --user SYSTEM --event "${@}"
+}
+
+WHAT=wakeonlan
+
+# User
+# ====
+export HOME=/share/Configuration/wakeonlan
+APKG_USER=admin
+APKG_GROUP=root
+
+# vim: ft=sh
