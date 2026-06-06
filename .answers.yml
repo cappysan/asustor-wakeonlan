@@ -27,7 +27,7 @@ answers:
   - has_precommit_nitpick: True
 
   - license: "MIT"
-  - version: "2026.6.5"
+  - version: "2026.6.6"
   - version_style: "calver"
   - copyright_string: "Cappysan, Julien Lecomte, and contributors"
 
@@ -51,7 +51,7 @@ answers:
   - has_adm_desktop: True
 
   # Items without visible questions:
-  - depends: "python3(>=3.10.0)"
+  - depends: '"python3(>=3.10.0)"'
   - adm_desktop_customizable: True
   - boot_priority_start: 70
   - boot_priority_stop: 30

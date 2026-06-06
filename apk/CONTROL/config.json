@@ -3,18 +3,17 @@
     "architecture": "any",
     "conflicts": [],
     "depends": [
-      python3(>=3.10.0)
+      "python3(>=3.10.0)"
     ],
     "email": "julien@cappysan.dev",
     "firmware": "5.0.0",
     "maintainer": "Cappysan",
     "name": "wakeonlan",
     "package": "cappysan-wakeonlan",
-    "version": "2026.6.5",
+    "version": "2026.6.6",
     "developer": "Cappysan",
     "website": "https://gitlab.com/cappysan/asustor/wakeonlan"
   },
-
   "adm-desktop": {
     "app": {
       "type": "internal",
@@ -29,10 +28,9 @@
     },
     "privilege": {
       "accessible": "administrators",
-      "customizable": True
+      "customizable": true
     }
   },
-
   "register": {
     "share-folder": [
       {
