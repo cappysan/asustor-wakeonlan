@@ -12,7 +12,9 @@ env | grep APKG | grep -v APKG_PKG_STATUS \
 # ------------------------------------------------------------------------------
 
 cd ${APKG_PKG_DIR:-/nonexistent} || exit 1
-. ${APKG_PKG_DIR}/env
+if test -f ${APKG_PKG_DIR}/env; then
+  . ${APKG_PKG_DIR}/env
+fi
 
 # Permissions
 # ===========
@@ -26,6 +28,12 @@ mkdir -p ${APKG_CFG_DIR}
 chown -R ${APKG_USER}:${APKG_GROUP} ${APKG_CFG_DIR}
 chmod 750 ${APKG_CFG_DIR}
 
+
+# Configuration
+# =============
+# Don't override files that could have been user modified.
+rsync -a --inplace --ignore-existing ${APKG_PKG_DIR}/conf.dist/ ${APKG_CFG_DIR}
+chown -R ${APKG_USER}:${APKG_GROUP} ${APKG_CFG_DIR}
 
 logger "[${WHAT}] Application installed."
 

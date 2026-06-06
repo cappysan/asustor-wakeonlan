@@ -20,7 +20,9 @@ license = "MIT"
 [project.urls]
 Homepage = "https://gitlab.com/cappysan/asustor/wakeonlan"
 
-
+# ------------------------------------------------------------------------------
+# Other tools
+# ------------------------------------------------------------------------------
 [tool.bumpversion]
 current_version = "2026.6.5"
 
@@ -47,10 +49,13 @@ moveable_tags = []
 commit_args = ""
 setup_hooks = []
 pre_commit_hooks = [
+
   "precommit autoupdate",
+
   "make pc",
 ]
 post_commit_hooks = []
+
 
 [[tool.bumpversion.files]]
 filename = ".answers.yml"
@@ -60,6 +65,7 @@ filename = "pyproject.toml"
 
 [[tool.bumpversion.files]]
 filename = "apk/CONTROL/config.json"
+
 
 [tool.codespell]
 # https://github.com/codespell-project/codespell/blob/main/README.rst

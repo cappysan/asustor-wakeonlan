@@ -1,1 +1,5 @@
 # Changelog
+
+Changes relevant to the users of Cappysan's Asustor wakeonlan APK are documented here.
+
+This project adheres to [CalVer Versioning](https://calver.org/).

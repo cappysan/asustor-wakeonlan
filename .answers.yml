@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+#
 ---
 # The following file enables recreating a templated output dir by executing:
 #   mk-scaffold clone "https://gitlab.com/cappysan/scaffolds/asustor-template" --input-file .answers.yml --output-dir output
@@ -26,7 +28,7 @@ answers:
 
   - license: "MIT"
   - version: "2026.6.5"
-  - version_style: "calver-rev"
+  - version_style: "calver"
   - copyright_string: "Cappysan, Julien Lecomte, and contributors"
 
   - keep_placeholders: False
@@ -35,7 +37,7 @@ answers:
   - template_version: "1.1.0-r4"
 
   - creation_year: "2026"
-  - last_update: "2026-06-03 20:25:27"
+  - last_update: "2026-06-06 12:30:54"
 
   - maintainer: "Cappysan"
   - developer: "Cappysan"
@@ -44,3 +46,13 @@ answers:
   - cfg_name: "wakeonlan"
   - cappysan_name: "cappysan-wakeonlan"
   - asustor_name: "asustor-wakeonlan"
+
+  - apk_description: "Wake-On-Lan user interface."
+  - has_adm_desktop: True
+
+  # Items without visible questions:
+  - depends: "python3(>=3.10.0)"
+  - adm_desktop_customizable: True
+  - boot_priority_start: 70
+  - boot_priority_stop: 30
+  - has_upstream: False

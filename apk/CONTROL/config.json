@@ -3,17 +3,18 @@
     "architecture": "any",
     "conflicts": [],
     "depends": [
-      "python3(>=3.10.0)"
+      python3(>=3.10.0)
     ],
     "email": "julien@cappysan.dev",
     "firmware": "5.0.0",
     "maintainer": "Cappysan",
     "name": "wakeonlan",
     "package": "cappysan-wakeonlan",
-    "version": "2026.6.4",
+    "version": "2026.6.5",
     "developer": "Cappysan",
     "website": "https://gitlab.com/cappysan/asustor/wakeonlan"
   },
+
   "adm-desktop": {
     "app": {
       "type": "internal",
@@ -28,9 +29,10 @@
     },
     "privilege": {
       "accessible": "administrators",
-      "customizable": true
+      "customizable": True
     }
   },
+
   "register": {
     "share-folder": [
       {
@@ -39,8 +41,9 @@
       }
     ],
     "boot-priority": {
-      "start-order": 50,
-      "stop-order": 50
+      "x-comment": "docker-ce start order is 65",
+      "start-order": 70,
+      "stop-order": 30
     }
   }
 }
