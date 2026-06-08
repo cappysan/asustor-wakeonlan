@@ -25,8 +25,7 @@ Ext.define('AS.ARC.apps.wakeonlan.core', {
             app:       fn.app,
             id:        fn.id,
             itemId:    fn.id,
-            title:     _S('WAKEONLAN', 'APP_TITLE'),
-            iconCls:   'app-wakeonlan-icon',
+            title:     '<div class="as-header" style="background-image:url(' + AS.ARC.util.fixDc('/apps/cappysan-wakeonlan/images/icon-app-task.png') + ');background-position:50%;background-repeat:no-repeat;"></div><div class="as-header-text">Wake on LAN</div>',
             width:     500,
             height:    530,
             minWidth:  500,
@@ -478,7 +477,7 @@ Ext.define('AS.ARC.apps.wakeonlan.core', {
 Ext.define('AS.ARC.apps.wakeonlan.main', {
     extend:     'AS.ARC._appBase',
     appTag:     'cappysan-wakeonlan',
-    title:      'wakeonlan',
+    title:      'Wake on LAN',
     appMaxNum:  1,
     appOpenNum: 0,
     appIsReady: true,
