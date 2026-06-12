@@ -27,7 +27,7 @@ answers:
   - has_precommit_nitpick: True
 
   - license: "MIT"
-  - version: "2026.6.8"
+  - version: "2026.6.9"
   - version_style: "calver"
   - copyright_string: "Cappysan, Julien Lecomte, and contributors"
 

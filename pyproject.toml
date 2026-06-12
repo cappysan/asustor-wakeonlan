@@ -8,7 +8,7 @@
 dynamic = ["dependencies"]
 
 name = "cappysan-wakeonlan"
-version = "2026.6.8"
+version = "2026.6.9"
 authors = [
   {name = "Julien Lecomte", email = "julien@cappysan.dev"}
 ]
@@ -24,7 +24,7 @@ Homepage = "https://gitlab.com/cappysan/asustor/wakeonlan"
 # Other tools
 # ------------------------------------------------------------------------------
 [tool.bumpversion]
-current_version = "2026.6.8"
+current_version = "2026.6.9"
 
 parse = """(?x)
   (?P<major>0|[1-9]\\d*)\\.
