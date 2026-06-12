@@ -27,9 +27,9 @@ Homepage = "https://gitlab.com/cappysan/asustor/wakeonlan"
 current_version = "2026.6.8"
 
 parse = """(?x)
-  (?P<major>2[0-9]{3})\\.    # year
-  (?P<minor>1[0-2]|[1-9])\\. # month
-  (?P<patch>0|[1-9]\\d*)     # patch
+  (?P<major>0|[1-9]\\d*)\\.
+  (?P<minor>0|[1-9]\\d*)\\.
+  (?P<patch>0|[1-9]\\d*)
 """
 serialize = [ "{major}.{minor}.{patch}" ]
 
