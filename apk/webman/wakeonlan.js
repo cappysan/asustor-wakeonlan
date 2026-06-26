@@ -428,7 +428,8 @@ Ext.define('AS.ARC.apps.wakeonlan.core', {
                     itemId:  'savedGrid',
                     border:  true,
                     store: Ext.create('Ext.data.Store', {
-                        fields: ['id', 'name', 'mac', 'broadcast', 'port'],
+                        fields: [{ name: 'id', type: 'int' }, 'name', 'mac', 'broadcast', 'port'],
+                        idProperty: 'id',
                         data:   []
                     }),
                     columns: [{
